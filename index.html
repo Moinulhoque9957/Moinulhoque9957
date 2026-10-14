@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DCA app · Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --sidebar-bg: #1e2a36;
+      --sidebar-text: #e0e0e0;
+      --primary: #d4a373;
+      --primary-dark: #b5835a;
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --gray: #7f8c8d;
+      --border: #e0e4e8;
+      --shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+      --radius: 18px;
+      --font: 'Poppins', sans-serif;
+      --sidebar-width: 260px;
+      --header-height: 70px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font); }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width);
+      background: var(--sidebar-bg); color: var(--sidebar-text); display: flex; flex-direction: column;
+      padding: 24px 0; z-index: 1000; transition: transform 0.3s ease;
+    }
+    .sidebar-logo { font-size: 1.6rem; font-weight: 700; padding: 0 24px 24px; color: white; letter-spacing: -0.5px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .sidebar-logo span { color: var(--primary); }
+    .sidebar-nav { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-nav a {
+      display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px;
+      color: var(--sidebar-text); text-decoration: none; font-weight: 500; font-size: 0.95rem;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .sidebar-nav a i { width: 22px; text-align: center; font-size: 1.1rem; }
+    .sidebar-nav a:hover, .sidebar-nav a.active { background: rgba(212, 163, 115, 0.15); color: white; }
+    .sidebar-nav a.active { background: var(--primary); color: white; }
+    .sidebar-logout { margin-top: auto; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; }
+
+    /* Main */
+    .main {
+      margin-left: var(--sidebar-width);
+      padding: 24px 28px;
+      transition: margin 0.3s;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px;
+    }
+    .topbar h1 { font-size: 1.6rem; font-weight: 600; }
+    .topbar .burger { display: none; background: transparent; border: none; font-size: 1.6rem; cursor: pointer; }
+
+    /* Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-icon {
+      width: 52px; height: 52px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; background: rgba(212, 163, 115, 0.15); color: var(--primary-dark);
+    }
+    .stat-info h3 { font-size: 1.6rem; font-weight: 700; }
+    .stat-info p { font-size: 0.8rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.4px; }
+
+    /* Tables */
+    .table-container {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 4px 4px 4px 4px;
+      box-shadow: var(--shadow);
+      overflow-x: auto;
+      margin-bottom: 30px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 700px; }
+    th { text-align: left; padding: 16px 12px; background: #f9fafb; font-weight: 600; color: var(--gray); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.5px; }
+    td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    .table-img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 18px; border-radius: 30px; border: none; font-weight: 500; font-size: 0.8rem;
+      cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: #ffeaea; color: #c0392b; }
+    .btn-danger:hover { background: #ffd6d6; }
+    .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+    .btn-outline { background: transparent; border: 1.5px solid var(--border); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(3px);
+      z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background: var(--card-bg); border-radius: var(--radius); width: 100%; max-width: 480px;
+      padding: 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); position: relative; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px; background: #f0f2f5; border: none;
+      width: 36px; height: 36px; border-radius: 50%; font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 500; margin-bottom: 6px; color: var(--gray); }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 14px;
+      font-size: 0.9rem; transition: 0.2s; outline: none;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--primary); }
+    .toast {
+      position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+      background: var(--sidebar-bg); color: white; padding: 14px 28px; border-radius: 40px;
+      font-weight: 500; box-shadow: 0 12px 30px rgba(0,0,0,0.2); z-index: 3000;
+      opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; }
+    .empty-state { padding: 40px; text-align: center; color: var(--gray); }
+    .empty-state i { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.3; }
+
+    /* Mobile bottom nav */
+    .mobile-nav {
+      display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 64px;
+      background: white; box-shadow: 0 -4px 20px rgba(0,0,0,0.05); z-index: 1100;
+      align-items: center; justify-content: space-around; border-top: 1px solid var(--border);
+    }
+    .mobile-nav a {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      color: var(--gray); text-decoration: none; font-size: 0.65rem; font-weight: 500;
+      padding: 6px 10px; border-radius: 30px; transition: 0.2s;
+    }
+    .mobile-nav a i { font-size: 1.2rem; }
+    .mobile-nav a.active { color: var(--primary); background: rgba(212,163,115,0.1); }
+
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; padding: 18px 16px 80px; }
+      .topbar .burger { display: block; }
+      .mobile-nav { display: flex; }
+      .sidebar-logout { display: none; }
+    }
+    @media (min-width: 1025px) {
+      .mobile-nav { display: none; }
+    }
+    .status-select { padding: 6px 10px; border-radius: 30px; border: 1.5px solid var(--border); font-size: 0.75rem; background: white; }
+  </style>
+</head>
+<body>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">DCA<span>Admin</span></div>
+    <nav class="sidebar-nav">
+      <a href="#dashboard" class="active" data-nav="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</a>
+      <a href="#products" data-nav="products"><i class="fas fa-box"></i> Products</a>
+      <a href="#orders" data-nav="orders"><i class="fas fa-shopping-bag"></i> Orders</a>
+      <a href="#slider" data-nav="slider"><i class="fas fa-images"></i> Slider</a>
+      <a href="#messages" data-nav="messages"><i class="fas fa-envelope"></i> Messages</a>
+      <div class="sidebar-logout">
+        <a id="logoutSidebar"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <button class="burger" id="burgerBtn"><i class="fas fa-bars"></i></button>
+      <h1 id="pageTitle">Dashboard</h1>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <span style="font-size:0.8rem; background:white; padding:8px 16px; border-radius:30px; box-shadow:var(--shadow);" id="adminEmailDisplay">admin</span>
+      </div>
+    </div>
+
+    <!-- DASHBOARD SECTION -->
+    <section id="dashboard-section">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-box"></i></div><div class="stat-info"><h3 id="statProducts">0</h3><p>Products</p></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-shopping-bag"></i></div><div class="stat-info"><h3 id="statOrders">0</h3><p>Orders</p></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-info"><h3 id="statUsers">0</h3><p>Users</p></div></div>
+        <div class="stat-card"><div class="stat-icon"><i class="fas fa-envelope"></i></div><div class="stat-info"><h3 id="statMessages">0</h3><p>Messages</p></div></div>
+      </div>
+    </section>
+
+    <!-- PRODUCTS SECTION -->
+    <section id="products-section" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <h2 style="font-size:1.2rem;">All Products</h2>
+        <button class="btn btn-primary" id="addProductBtn"><i class="fas fa-plus"></i> Add Product</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Description</th><th>Actions</th></tr></thead>
+          <tbody id="productsTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ORDERS SECTION -->
+    <section id="orders-section" style="display:none;">
+      <h2 style="font-size:1.2rem; margin-bottom:18px;">All Orders</h2>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Email</th><th>Address</th><th>Date</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="ordersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SLIDER SECTION -->
+    <section id="slider-section" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <h2 style="font-size:1.2rem;">Slider Images</h2>
+        <button class="btn btn-primary" id="addSliderBtn"><i class="fas fa-plus"></i> Add Image</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Preview</th><th>Image URL</th><th>Delete</th></tr></thead>
+          <tbody id="sliderTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- MESSAGES SECTION -->
+    <section id="messages-section" style="display:none;">
+      <h2 style="font-size:1.2rem; margin-bottom:18px;">Contact Messages</h2>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Date</th><th>Name</th><th>Email</th><th>Message</th></tr></thead>
+          <tbody id="messagesTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-nav">
+    <a href="#dashboard" class="active" data-mob="dashboard"><i class="fas fa-chart-pie"></i>Dashboard</a>
+    <a href="#products" data-mob="products"><i class="fas fa-box"></i>Products</a>
+    <a href="#orders" data-mob="orders"><i class="fas fa-shopping-bag"></i>Orders</a>
+    <a href="#slider" data-mob="slider"><i class="fas fa-images"></i>Slider</a>
+    <a href="#messages" data-mob="messages"><i class="fas fa-envelope"></i>Messages</a>
+  </nav>
+
+  <!-- PRODUCT MODAL -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-content">
+      <button class="modal-close" id="productModalClose"><i class="fas fa-times"></i></button>
+      <h3 id="productModalTitle" style="margin-bottom:18px;">Add Product</h3>
+      <form id="productForm">
+        <input type="hidden" id="productEditId">
+        <div class="form-group"><label>Name</label><input type="text" id="productName" required></div>
+        <div class="form-group"><label>Category</label><input type="text" id="productCategory" required></div>
+        <div class="form-group"><label>Price</label><input type="number" id="productPrice" step="0.01" required></div>
+        <div class="form-group"><label>Description</label><textarea id="productDesc" rows="3"></textarea></div>
+        <div class="form-group"><label>Image URL</label><input type="url" id="productImage" required></div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- SLIDER MODAL -->
+  <div class="modal-overlay" id="sliderModal">
+    <div class="modal-content">
+      <button class="modal-close" id="sliderModalClose"><i class="fas fa-times"></i></button>
+      <h3 style="margin-bottom:18px;">Add Slider Image</h3>
+      <form id="sliderForm">
+        <div class="form-group"><label>Image URL</label><input type="url" id="sliderUrl" required></div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Add Image</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import { getDatabase, ref, set, get, push, update, remove, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4BBG7W9Xa8QgL2bWZlizaKM-vvd9q3E0",
+      authDomain: "miinulhoque.firebaseapp.com",
+      databaseURL: "https://miinulhoque-default-rtdb.firebaseio.com",
+      projectId: "miinulhoque",
+      storageBucket: "miinulhoque.firebasestorage.app",
+      messagingSenderId: "598120247397",
+      appId: "1:598120247397:web:90d0ede68122eab29dd68c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const $ = id => document.getElementById(id);
+    const toastEl = $('toast');
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 2500);
+    }
+
+    // ---------- AUTH ----------
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'index.html';
+        return;
+      }
+      $('adminEmailDisplay').textContent = user.email;
+      loadDashboardStats();
+      loadProductsTable();
+      loadOrdersTable();
+      loadSliderTable();
+      loadMessagesTable();
+    });
+
+    $('logoutSidebar').addEventListener('click', () => signOut(auth).then(() => window.location.href = 'index.html'));
+
+    // ---------- ROUTING ----------
+    const sections = {
+      dashboard: $('dashboard-section'),
+      products: $('products-section'),
+      orders: $('orders-section'),
+      slider: $('slider-section'),
+      messages: $('messages-section')
+    };
+    const navLinks = document.querySelectorAll('.sidebar-nav a[data-nav]');
+    const mobLinks = document.querySelectorAll('.mobile-nav a[data-mob]');
+
+    function navigateTo(section) {
+      Object.entries(sections).forEach(([key, el]) => el.style.display = key === section ? 'block' : 'none');
+      navLinks.forEach(a => a.classList.toggle('active', a.dataset.nav === section));
+      mobLinks.forEach(a => a.classList.toggle('active', a.dataset.mob === section));
+      $('pageTitle').textContent = section.charAt(0).toUpperCase() + section.slice(1);
+      if (window.innerWidth <= 1024) $('sidebar').classList.remove('open');
+    }
+
+    window.addEventListener('hashchange', () => {
+      const sec = location.hash.replace('#', '') || 'dashboard';
+      navigateTo(sec);
+    });
+
+    // Burger menu
+    $('burgerBtn').addEventListener('click', () => $('sidebar').classList.toggle('open'));
+
+    // ---------- DASHBOARD STATS ----------
+    function loadDashboardStats() {
+      onValue(ref(db, 'products'), snap => $('statProducts').textContent = snap.exists() ? Object.keys(snap.val()).length : 0);
+      onValue(ref(db, 'orders'), snap => {
+        let count = 0;
+        if (snap.exists()) {
+          Object.values(snap.val()).forEach(userOrders => count += Object.keys(userOrders).length);
+        }
+        $('statOrders').textContent = count;
+      });
+      onValue(ref(db, 'users'), snap => $('statUsers').textContent = snap.exists() ? Object.keys(snap.val()).length : 0);
+      onValue(ref(db, 'messages'), snap => $('statMessages').textContent = snap.exists() ? Object.keys(snap.val()).length : 0);
+    }
+
+    // ---------- PRODUCTS ----------
+    function loadProductsTable() {
+      onValue(ref(db, 'products'), (snap) => {
+        const tbody = $('productsTableBody');
+        const data = snap.val();
+        if (!data) { tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No products</td></tr>'; return; }
+        tbody.innerHTML = Object.entries(data).map(([id, p]) => `
+          <tr>
+            <td><img class="table-img" src="${p.imageUrl || ''}" alt=""></td>
+            <td>${p.name}</td>
+            <td>${p.category || '-'}</td>
+            <td>₹${p.price}</td>
+            <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.description || ''}</td>
+            <td>
+              <button class="btn btn-sm btn-primary edit-product" data-id="${id}"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-sm btn-danger delete-product" data-id="${id}"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+        document.querySelectorAll('.edit-product').forEach(btn => btn.addEventListener('click', () => openProductModal(btn.dataset.id)));
+        document.querySelectorAll('.delete-product').forEach(btn => btn.addEventListener('click', () => deleteProduct(btn.dataset.id)));
+      });
+    }
+
+    function openProductModal(id = null) {
+      const modal = $('productModal');
+      if (id) {
+        get(ref(db, `products/${id}`)).then(snap => {
+          const p = snap.val();
+          if (!p) return;
+          $('productEditId').value = id;
+          $('productName').value = p.name || '';
+          $('productCategory').value = p.category || '';
+          $('productPrice').value = p.price || '';
+          $('productDesc').value = p.description || '';
+          $('productImage').value = p.imageUrl || '';
+          $('productModalTitle').textContent = 'Edit Product';
+          modal.classList.add('active');
+        });
+      } else {
+        $('productEditId').value = '';
+        $('productForm').reset();
+        $('productModalTitle').textContent = 'Add Product';
+        modal.classList.add('active');
+      }
+    }
+
+    $('addProductBtn').addEventListener('click', () => openProductModal());
+    $('productModalClose').addEventListener('click', () => $('productModal').classList.remove('active'));
+    $('productForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = $('productEditId').value;
+      const productData = {
+        name: $('productName').value.trim(),
+        category: $('productCategory').value.trim(),
+        price: parseFloat($('productPrice').value),
+        description: $('productDesc').value.trim(),
+        imageUrl: $('productImage').value.trim()
+      };
+      try {
+        if (id) {
+          await update(ref(db, `products/${id}`), productData);
+          showToast('Product updated');
+        } else {
+          const newRef = push(ref(db, 'products'));
+          await set(newRef, productData);
+          showToast('Product added');
+        }
+        $('productModal').classList.remove('active');
+      } catch (err) { showToast(err.message); }
+    });
+
+    async function deleteProduct(id) {
+      if (!confirm('Delete this product permanently?')) return;
+      await remove(ref(db, `products/${id}`));
+      showToast('Product deleted');
+    }
+
+    // ---------- ORDERS ----------
+    function loadOrdersTable() {
+      onValue(ref(db, 'orders'), (snap) => {
+        const tbody = $('ordersTableBody');
+        const data = snap.val();
+        if (!data) { tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No orders</td></tr>'; return; }
+        let rows = '';
+        Object.entries(data).forEach(([userId, userOrders]) => {
+          Object.entries(userOrders).forEach(([orderId, o]) => {
+            rows += `
+              <tr>
+                <td>#${orderId.slice(-6)}</td>
+                <td>${o.username || 'N/A'}</td>
+                <td>${o.phoneNumber || '-'}</td>
+                <td>${o.userEmail || '-'}</td>
+                <td style="max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${o.shippingAddress || ''}</td>
+                <td>${new Date(o.date).toLocaleDateString()}</td>
+                <td>₹${o.totalAmount}</td>
+                <td>
+                  <select class="status-select" data-order="${orderId}" data-user="${userId}">
+                    ${['Pending','Confirmed','Preparing','Shipped','Delivered','Cancelled'].map(s => `<option ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+                  </select>
+                </td>
+                <td><button class="btn btn-sm btn-danger delete-order" data-order="${orderId}" data-user="${userId}"><i class="fas fa-trash"></i></button></td>
+              </tr>
+            `;
+          });
+        });
+        tbody.innerHTML = rows;
+        tbody.querySelectorAll('.status-select').forEach(sel => {
+          sel.addEventListener('change', (e) => {
+            const orderId = sel.dataset.order;
+            const userId = sel.dataset.user;
+            update(ref(db, `orders/${userId}/${orderId}`), { status: e.target.value });
+            showToast('Status updated');
+          });
+        });
+        tbody.querySelectorAll('.delete-order').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Delete this order?')) return;
+            const orderId = btn.dataset.order;
+            const userId = btn.dataset.user;
+            await remove(ref(db, `orders/${userId}/${orderId}`));
+            showToast('Order deleted');
+          });
+        });
+      });
+    }
+
+    // ---------- SLIDER ----------
+    function loadSliderTable() {
+      onValue(ref(db, 'sliderImages'), (snap) => {
+        const tbody = $('sliderTableBody');
+        const data = snap.val();
+        if (!data) { tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No slider images</td></tr>'; return; }
+        tbody.innerHTML = Object.entries(data).map(([id, v]) => `
+          <tr>
+            <td><img class="table-img" src="${v.downloadURL}" style="width:80px; height:50px; object-fit:cover; border-radius:8px;"></td>
+            <td style="max-width:300px; word-break:break-all;">${v.downloadURL}</td>
+            <td><button class="btn btn-sm btn-danger delete-slider" data-id="${id}"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        `).join('');
+        document.querySelectorAll('.delete-slider').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            if (!confirm('Delete this slider image?')) return;
+            await remove(ref(db, `sliderImages/${btn.dataset.id}`));
+            showToast('Slider image deleted');
+          });
+        });
+      });
+    }
+
+    $('addSliderBtn').addEventListener('click', () => $('sliderModal').classList.add('active'));
+    $('sliderModalClose').addEventListener('click', () => $('sliderModal').classList.remove('active'));
+    $('sliderForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = $('sliderUrl').value.trim();
+      if (!url) return;
+      const newRef = push(ref(db, 'sliderImages'));
+      await set(newRef, { downloadURL: url });
+      $('sliderModal').classList.remove('active');
+      $('sliderForm').reset();
+      showToast('Slider image added');
+    });
+
+    // ---------- MESSAGES ----------
+    function loadMessagesTable() {
+      onValue(ref(db, 'messages'), (snap) => {
+        const tbody = $('messagesTableBody');
+        const data = snap.val();
+        if (!data) { tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No messages</td></tr>'; return; }
+        tbody.innerHTML = Object.entries(data).map(([id, m]) => `
+          <tr>
+            <td>${new Date(m.date).toLocaleDateString()}</td>
+            <td>${m.name}</td>
+            <td>${m.email}</td>
+            <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.message}</td>
+          </tr>
+        `).join('');
+      });
+    }
+
+    // ---------- INITIAL NAV ----------
+    if (!location.hash) location.hash = '#dashboard';
+    navigateTo(location.hash.replace('#', ''));
+  </script>
+</body>
+</html>
